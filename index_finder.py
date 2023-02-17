@@ -1,11 +1,12 @@
-def fetch_posting(textfile): #fetches the elements to create the posting
-  return posting # what should posting be?
+def fetch_posting(textfile):  # fetches the elements to create the posting
+    posting = textfile
+    return posting  # what should posting be?
 
 
 def create_index(indexed_object):
-  index = {}
-  return index
-  
+    index = {}
+    return index
+
 
 if __name__ == '__main__':
-  create_index()
+    create_index('')

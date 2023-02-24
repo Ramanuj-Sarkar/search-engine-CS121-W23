@@ -119,10 +119,27 @@ class indexer:
         self.pickle_doc_id()
         self.write_report()
 
+    def parse_query(self):
+        query = input("Enter search query: ")
+        terms = query.lower()   # mimicking self.tokenize without dealing with soup stuff
+        terms = re.sub(r'[^a-z0-9\']+', ' ', terms)
+        terms = re.sub(r'([^a-z0-9]\'|\'[^a-z0-9])', ' ', terms)
+        terms = terms.split()
+        terms = self.stem_tokens(terms)
+        docs = set(self.doc_id.keys())
+        for term in terms:
+            if term in self.inverted_index:
+                ids = set(self.inverted_index[term].keys())
+                docs = docs.intersection(ids)
+        scored_docs = [(doc_id, sum([self.inverted_index[term][doc_id] for term in terms])) for doc_id in docs]
+        scored_docs.sort(key=lambda x: x[1], reverse=True)
+        top_5 = [self.doc_id[scored_docs[0]] for scored_docs in scored_docs[:5]]
+        with open("report2.txt", "w") as outfile:
+            outfile.write("The top 5 pages with these all the query parts are:")
+            for number, doc_id in enumerate(top_5):
+                outfile.write(f"{number + 1}. {doc_id}")
+
 if __name__ == "__main__":
     ini = indexer()
     ini.run()
-
-
-                
-
+    ini.parse_query()

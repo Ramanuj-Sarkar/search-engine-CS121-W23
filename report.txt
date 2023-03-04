@@ -1,0 +1,3 @@
+The number of indexed document: 55393
+The number of unique words: 1093244
+The total size of index on disk: 80394.202 KB

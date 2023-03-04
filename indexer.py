@@ -31,22 +31,35 @@ class indexer:
                 self.num_pages += 1
                 #tokenize everything in the content json
                 tokens = self.tokenize(soup)
+                #tokenize important words
+                tokens_important = []
+                for i in soup.find_all(['b', 'strong', 'h1', 'h2', 'h3', 'title']):
+                    #tokenize everything that is within the tags above
+                    tok = self.tokenize(i)
+                    for i in tok:
+                        tokens_important.append(i)
                 #stems the words
-                tokens = self.stem_tokens(tokens)
+                stem_tokens = self.stem_tokens(tokens)
+                stem_tokens_important = self.stem_tokens(tokens_important)
                 #get all the words in the page into a frequency dictionary
-                freq_dict = self.compute_word_frequencies(tokens)
+                freq_dict = self.compute_word_frequencies(stem_tokens)
+                freq_dict_important = self.compute_word_frequencies(stem_tokens_important)
                 #add to index
-                self.add_to_index(freq_dict)
+                self.add_to_index(freq_dict, freq_dict_important)
 
-    def add_to_index(self, freq_dict):
+    def add_to_index(self, freq_dict, freq_dict_important):
         #loop through dict and add each token to inverted_index
         for token in freq_dict.keys():
             if token in self.inverted_index:
                 self.inverted_index[token][self.current_doc_id] = freq_dict[token]
+                if token in freq_dict_important:
+                    self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
             else:
                 self.unique_words += 1
                 self.inverted_index[token] = {}
                 self.inverted_index[token][self.current_doc_id] = freq_dict[token]
+                if token in freq_dict_important:
+                    self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
 
     def stem_tokens(self, token_list):
         #gets the tokenize list and uses stemming on all words
@@ -111,7 +124,7 @@ class indexer:
         file = os.getcwd()
         file += "\\inverted_index.pickle"
         #returns the size
-        return os.path.getsize(file) / 1000
+        return os.path.getsize(file) / 1000 #to get in KB
 
     def run(self):
         self.create_index()
@@ -122,7 +135,3 @@ class indexer:
 if __name__ == "__main__":
     ini = indexer()
     ini.run()
-
-
-                
-

@@ -1,19 +1,19 @@
 import os
 import json
 from bs4 import BeautifulSoup
+from math import log
 import re
 from nltk.stem.snowball import SnowballStemmer
 from collections import defaultdict
 import pickle
 
 
-class indexer:
+class Indexer:
     def __init__(self) -> None:
         self.doc_id = {}  # will map doc_id to url
         self.doc_id_gen = 0  # value to assign to a doc
         self.num_pages = 0  # number of indexed documents
-        self.inverted_index = {}  # {token:{doc_id1:frequency, doc_id2:frequency}}
-        self.position_index = {}  # {token:{(doc_id1, position), (doc_id2, position)}}
+        self.inverted_index = {}  # {token:{doc_id1:tf.idf, doc_id2:tf.idf}}
         self.unique_words = 0
         self.current_doc_id = 0
 
@@ -25,8 +25,6 @@ class indexer:
         # gets all the pages and attaches it with correct path names
         for root, dirs, files in os.walk(target_pages):
             exact_token_match = set()
-            # {doc_id1: [[2-gram], [3-gram]]}
-            approximate_token_match = {}
             for file in files:
                 file = os.path.join(root, file)
                 # load the json file
@@ -54,22 +52,26 @@ class indexer:
                 # get all the words in the page into a frequency dictionary
                 freq_dict = self.compute_word_frequencies(stem_tokens)
                 freq_dict_important = self.compute_word_frequencies(stem_tokens_important)
-                # add to index
-                self.add_to_index(freq_dict, freq_dict_important)
+                # add to index, with len(tokens) representing word count in document
+                self.add_to_index(freq_dict, freq_dict_important, len(tokens))
+        # incorporate idf into tf.idf
+        for token, total_documents in self.inverted_index.items():
+            # log((total document # + 1) / (document # including keyword + 1))
+            idf = log((self.num_pages + 1) / (len(total_documents) + 1))
+            self.inverted_index[token] = {doc_id: doc_value * idf for doc_id, doc_value in total_documents}
 
-    def add_to_index(self, freq_dict, freq_dict_important):
+    def add_to_index(self, freq_dict, freq_dict_important, doc_length):
         # loop through dict and add each token to inverted_index
-        for token in freq_dict.keys():
-            if token in self.inverted_index:
-                self.inverted_index[token][self.current_doc_id] = freq_dict[token]
-                if token in freq_dict_important:
-                    self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
-            else:
+        for token in freq_dict:
+            if token not in self.inverted_index:
                 self.unique_words += 1
                 self.inverted_index[token] = {}
-                self.inverted_index[token][self.current_doc_id] = freq_dict[token]
-                if token in freq_dict_important:
-                    self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
+            doc_dict = self.inverted_index[token]
+            doc_dict[self.current_doc_id] = freq_dict[token]
+            if token in freq_dict_important:
+                doc_dict[self.current_doc_id] += freq_dict_important[token]
+            # incorporate doc length for term frequency
+            doc_dict[self.current_doc_id] = log(doc_dict[self.current_doc_id]) / doc_length
 
     @staticmethod
     def stem_tokens(token_list):
@@ -148,5 +150,5 @@ class indexer:
 
 
 if __name__ == "__main__":
-    ini = indexer()
+    ini = Indexer()
     ini.run()

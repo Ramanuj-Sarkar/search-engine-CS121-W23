@@ -12,7 +12,8 @@ class indexer:
         self.doc_id = {}  # will map doc_id to url
         self.doc_id_gen = 0  # value to assign to a doc
         self.num_pages = 0  # number of indexed documents
-        self.inverted_index = {}  # {token:{doc_id1: fequency, doc_id2: frequency}}
+        self.inverted_index = {}  # {token:{doc_id1:frequency, doc_id2:frequency}}
+        self.position_index = {}  # {token:{(doc_id1, position), (doc_id2, position)}}
         self.unique_words = 0
         self.current_doc_id = 0
 
@@ -23,8 +24,9 @@ class indexer:
 
         # gets all the pages and attaches it with correct path names
         for root, dirs, files in os.walk(target_pages):
-            # set used to find exact matches
-            exact_token_match = {}
+            exact_token_match = set()
+            # {doc_id1: [[2-gram], [3-gram]]}
+            approximate_token_match = {}
             for file in files:
                 file = os.path.join(root, file)
                 # load the json file
@@ -44,8 +46,8 @@ class indexer:
                 for i in soup.find_all(['b', 'strong', 'h1', 'h2', 'h3', 'title']):
                     # tokenize everything that is within the tags above
                     tok = self.tokenize(i)
-                    for i in tok:
-                        tokens_important.append(i)
+                    for j in tok:
+                        tokens_important.append(j)
                 # stems the words
                 stem_tokens = self.stem_tokens(tokens)
                 stem_tokens_important = self.stem_tokens(tokens_important)
@@ -69,15 +71,17 @@ class indexer:
                 if token in freq_dict_important:
                     self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
 
-    def stem_tokens(self, token_list):
-        # gets the tokenize list and uses stemming on all words
+    @staticmethod
+    def stem_tokens(token_list):
+        # gets the list from tokenize and uses stemming on all words
         stemmer = SnowballStemmer("english")
         stem_words = []
         for token in token_list:
             stem_words.append(stemmer.stem(token))
         return stem_words
 
-    def tokenize(self, soup_content):
+    @staticmethod
+    def tokenize(soup_content):
         # get all the text from the html page
         # and make it lowercase
         html_text = soup_content.get_text().lower()
@@ -91,7 +95,8 @@ class indexer:
         # puts all the words into a list
         return html_text.split()
 
-    def compute_word_frequencies(self, token_list):
+    @staticmethod
+    def compute_word_frequencies(token_list):
         frequencies = defaultdict(int)
         for token in token_list:
             frequencies[token] += 1
@@ -127,7 +132,8 @@ class indexer:
         with open("doc_id.pickle", "wb") as my_file:
             pickle.dump(self.doc_id, my_file)
 
-    def get_index_file_size(self):
+    @staticmethod
+    def get_index_file_size():
         # get the path of pickle file
         file = os.getcwd()
         file += "\\inverted_index.pickle"

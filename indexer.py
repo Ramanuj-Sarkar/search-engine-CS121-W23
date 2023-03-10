@@ -58,7 +58,7 @@ class Indexer:
         for token, total_documents in self.inverted_index.items():
             # log((total document # + 1) / (document # including keyword + 1))
             idf = log((self.num_pages + 1) / (len(total_documents) + 1))
-            self.inverted_index[token] = {doc_id: doc_value * idf for doc_id, doc_value in total_documents}
+            self.inverted_index[token] = {doc_id: (doc_value * idf) for doc_id, doc_value in total_documents.items()}
 
     def add_to_index(self, freq_dict, freq_dict_important, doc_length):
         # loop through dict and add each token to inverted_index

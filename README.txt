@@ -1,4 +1,14 @@
-== Running the Code ==
+== Notes ==
+
+The indexer will only run files and not files within a zipped folder.
+
+To change where the indexer runs you have to change the path in the create_index function "target_pages += \FILEPATH".
+
+Note that for linux systems you will use / instead of \\.
+
+This is currently set up to read from the dev folder on a windows system.
+
+== Running the Code on Windows ==
 
 1. Create the index by running indexer.py.
 

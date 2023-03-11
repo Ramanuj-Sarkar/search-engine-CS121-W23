@@ -107,7 +107,6 @@ class Search:
     def run_text(self):
         # uses the console to search the index
         time_list = []
-        repeat = 0
         while self.obtain_proper_input() in {'Y', 'y'}:
             queries = self.process_query(input("Query: ").lower())
             print()
@@ -115,10 +114,8 @@ class Search:
             self.print_result(self.get_documents(queries))
             finished_time = time.time() - start_time
             time_list.append(finished_time)
-            repeat += 1
-        if repeat > 0:
-            print("My program took", sum(time_list) / repeat, "s to run")
-        print(time_list)
+        if len(time_list) > 0:
+            print("My program took", sum(time_list) / len(time_list), "s to run")
 
     def run_tkinter(self):
         # uses tkinter to search the index
@@ -126,10 +123,12 @@ class Search:
         window = tk.Frame(root)
         window.pack(expand=1)
 
+        time_list = []
         output_text = tk.StringVar(window, value="")
 
         def change_output():
-            query_as_string = query_entry_box.get(1.0, "end-1c")
+            query_as_string = query_entry_box.get()
+            start_time = time.time()
             doc_list = self.get_documents(self.process_query(query_as_string))
             doc_string = ''
             try:
@@ -139,6 +138,8 @@ class Search:
                 doc_string += "Could not find 5 results."
             output_text.set(doc_string)
             window.update()
+            finished_time = time.time() - start_time
+            time_list.append(finished_time)
 
         tk.Label(window).grid(row=0, column=0, rowspan=6)
         tk.Label(window,text="Local GUI").grid(row=0, column=1, columnspan=4)
@@ -147,16 +148,18 @@ class Search:
         tk.Label(window, textvariable=output_text).grid(row=3, column=1, rowspan=4)
 
         tk.Label(window, text="Query Entry Box: ").grid(row=1, column=1)
-        query_entry_box = tk.Text(window, height=1, width=20)
+        query_entry_box = tk.Entry(window, width=20)
         query_entry_box.grid(row=1, column=2, columnspan=2)
 
         set_query_button = tk.Button(window, text="Enter Query", width=8, command=change_output)
         set_query_button.grid(row=1, column=4)
 
         root.mainloop()
+        if len(time_list) > 0:
+            print("My program took", sum(time_list) / len(time_list), "s to run")
+
 
 
 if __name__ == "__main__":
     a = Search()
     a.run()
-

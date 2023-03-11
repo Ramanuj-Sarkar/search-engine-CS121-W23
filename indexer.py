@@ -53,14 +53,12 @@ class indexer:
                 self.add_to_index(freq_dict, freq_dict_important)
                 #Dump partial index into disk if files currently read through is larger than 13,000
                 if self.partial_pages >= 13000 :
-                    print("gay" + str(self.currentPartial))
                     file_name = "inverted_index" + str(self.currentPartial)+ ".pickle"
                     self.partial_files.append(file_name)
                     self.currentPartial+= 1
                     self.partial_pages = 0
                     self.pickle_index(file_name)
                     self.inverted_index = {}
-                    print("gay" + str(self.currentPartial))
 
     def add_to_index(self, freq_dict, freq_dict_important):
         #loop through dict and add each token to inverted_index

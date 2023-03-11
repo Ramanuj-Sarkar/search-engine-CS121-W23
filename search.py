@@ -11,8 +11,8 @@ class Search:
         self.doc_id = {}
 
     def load_index(self):
-        # loads in inverted index
-        with open("inverted_index.pickle", "rb") as myFile:
+        #loads in inverted index
+        with open("merged_index_final.pickle", "rb") as myFile:
             self.inverted_index = pickle.load(myFile)
 
     def load_doc_id(self):

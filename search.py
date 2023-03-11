@@ -1,12 +1,14 @@
 import pickle
 import re
 from nltk.stem.snowball import SnowballStemmer
+import time
 
 class Search:
     def __init__(self):
         #initializes the indexes
         self.inverted_index = {}
         self.doc_id = {}
+        self.loop = True
 
     def load_index(self):
         #loads in inverted index
@@ -39,6 +41,7 @@ class Search:
         print("Query: ", end = "")
         user_input = input().lower()
         print()
+        self.start_time = time.time() #keep track of how ong to fetch each query
         return self.process_query(user_input)
     
     def retrieve_doc_id(self, query_token):
@@ -58,6 +61,9 @@ class Search:
 
     def get_documents(self):
         query_list = self.get_user_query()
+        if (len(query_list) == 0):
+            self.loop = False
+            return
         merge_dic = {}
         #find a page that all tokens have in common
         for i in range(len(query_list)):
@@ -79,11 +85,13 @@ class Search:
         except:
             print("Could not find 5 results.")
         print()
+        print("Finished in {}ms\n".format(round((time.time() - self.start_time) * 1000)))
 
     def run(self):
         self.load_doc_id()
         self.load_index()
-        self.print_result(self.get_documents())
+        while(self.loop):
+            self.print_result(self.get_documents())
 
 if __name__ == "__main__":
     a = Search()

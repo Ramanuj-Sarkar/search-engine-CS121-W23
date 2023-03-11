@@ -5,6 +5,7 @@ import re
 from nltk.stem.snowball import SnowballStemmer
 from collections import defaultdict
 import pickle
+import math
 
 class indexer:
     def __init__(self) -> None:
@@ -60,6 +61,11 @@ class indexer:
                 self.inverted_index[token][self.current_doc_id] = freq_dict[token]
                 if token in freq_dict_important:
                     self.inverted_index[token][self.current_doc_id] += freq_dict_important[token]
+
+    def compute_score(self):
+        for token in self.inverted_index.keys():
+            for doc in self.inverted_index[token].keys():
+                self.inverted_index[token][doc] = (1 + math.log(self.inverted_index[token][doc])) * math.log(self.num_pages/ len(self.inverted_index[token]))
 
     def stem_tokens(self, token_list):
         #gets the tokenize list and uses stemming on all words
@@ -128,6 +134,7 @@ class indexer:
 
     def run(self):
         self.create_index()
+        self.compute_score()
         self.pickle_index()
         self.pickle_doc_id()
         self.write_report()

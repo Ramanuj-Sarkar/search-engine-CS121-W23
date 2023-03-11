@@ -11,10 +11,13 @@ class indexer:
     def __init__(self) -> None:
         self.doc_id = {} #will map doc_id to url
         self.doc_id_gen  = 0 #value to assign to a doc
-        self.num_pages = 0 #number of indexed documents
+        self.num_pages = 0 #number of indexed documents 
+        self.partial_pages = 0 #number of total indexed documents for current partial index
         self.inverted_index = {} #{token:{doc_id1: fequency, doc_id2: frequency}}
         self.unique_words = 0
         self.current_doc_id = 0
+        self.currentPartial = 0
+        self.partial_files = []
     
     def create_index(self):
         #opens up the directory with all the pages
@@ -30,6 +33,7 @@ class indexer:
                 #file is now a json(dic format with 'url' 'content' 'encoding')
                 soup = BeautifulSoup(file['content'], "lxml")
                 self.num_pages += 1
+                self.partial_pages += 1
                 #tokenize everything in the content json
                 tokens = self.tokenize(soup)
                 #tokenize important words
@@ -47,6 +51,16 @@ class indexer:
                 freq_dict_important = self.compute_word_frequencies(stem_tokens_important)
                 #add to index
                 self.add_to_index(freq_dict, freq_dict_important)
+                #Dump partial index into disk if files currently read through is larger than 13,000
+                if self.partial_pages >= 13000 :
+                    print("gay" + str(self.currentPartial))
+                    file_name = "inverted_index" + str(self.currentPartial)+ ".pickle"
+                    self.partial_files.append(file_name)
+                    self.currentPartial+= 1
+                    self.partial_pages = 0
+                    self.pickle_index(file_name)
+                    self.inverted_index = {}
+                    print("gay" + str(self.currentPartial))
 
     def add_to_index(self, freq_dict, freq_dict_important):
         #loop through dict and add each token to inverted_index
@@ -115,9 +129,9 @@ class indexer:
             my_file.write("The number of unique words: {}\n".format(self.unique_words))
             my_file.write("The total size of index on disk: {} KB\n".format(self.get_index_file_size()))
 
-    def pickle_index(self):
+    def pickle_index(self,file_name ):
         #stores inverted index in disk
-        with open("inverted_index.pickle", "wb") as my_file:
+        with open(file_name, "wb") as my_file:
             pickle.dump(self.inverted_index, my_file)
     
     def pickle_doc_id(self):
@@ -131,11 +145,29 @@ class indexer:
         file += "\\inverted_index.pickle"
         #returns the size
         return os.path.getsize(file) / 1000 #to get in KB
+    
+
+    def merge_partial(self, partial_list):
+        #merges all files into final inverted index file
+        merged_index = defaultdict(dict)
+        for file in partial_list:
+            with open(file, 'rb') as given:
+                partial_index = pickle.load(given)
+                for token, docID in partial_index.items():
+                    merged_index[token].update(docID)
+        with open("merged_index_final.pickle", 'wb') as my_file:
+            pickle.dump(merged_index, my_file)
+        
+
+
 
     def run(self):
         self.create_index()
         self.compute_score()
-        self.pickle_index()
+        file_name = "inverted_index" + str(self.currentPartial)+ ".pickle"
+        self.partial_files.append(file_name)
+        self.pickle_index(file_name) #remember to add last pickle_index with file name of last partial index
+        self.merge_partial(self.partial_files) #merges partial indexes
         self.pickle_doc_id()
         self.write_report()
 

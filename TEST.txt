@@ -1,0 +1,22 @@
+=== good queries ===
+financial aid
+top majors
+tuition fee
+data structures
+software engineering
+data visualization
+campus clubs
+faculty contact information
+software design techniques
+statistical methods for data analysis
+=== bad queries ===
+cat and dog - bad results, used tf.idf rather than unchanged weighting
+home workout routine - bad results, used tf.idf rather than unchanged weighting
+improve sleep quality - bad results, used tf.idf rather than unchanged weighting
+elephant weight - bad results, used tf.idf rather than unchanged weighting
+how to check email - bad results, used tf.idf rather than unchanged weighting
+food on campus - bad results, used tf.idf rather than unchanged weighting
+study locations - bad results, used tf.idf rather than unchanged weighting
+class schedules - bad results, used tf.idf rather than unchanged weighting
+database design - bad results, used tf.idf rather than unchanged weighting
+campus events - bad results, used tf.idf rather than unchanged weighting
